@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 import json
 
 """This script continuously monitors Gmail for new invoices/receipts and downloads them."""
-
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 CHECK_INTERVAL = 20  # seconds
 PROCESSED_FILE = 'processed_messages.json'

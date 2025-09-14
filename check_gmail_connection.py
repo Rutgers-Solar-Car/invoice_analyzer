@@ -4,7 +4,6 @@ from google.auth.transport.requests import Request
 import os
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-
 def get_service():
     from google.oauth2.credentials import Credentials
     creds = None

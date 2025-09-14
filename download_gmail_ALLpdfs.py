@@ -6,7 +6,6 @@ import os, base64
 
 """Only and only run this script if you need to download older invoices from Gmail."""
 """This script searches for emails containing the keyword "Invoice" and saves any PDF attachments or the email text itself if no PDF is found."""
-
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 def get_service():
