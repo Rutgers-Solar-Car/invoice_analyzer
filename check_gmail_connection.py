@@ -17,9 +17,14 @@ def get_service():
             creds = flow.run_local_server(port=0)
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
+
+    service = build('gmail', 'v1', credentials=creds)
+    user = service.users().getProfile(userId='me').execute()
+    print("✅ Connected to Gmail Account:", user["emailAddress"])
     return build('gmail', 'v1', credentials=creds)
 
 if __name__ == "__main__":
     service = get_service()
     profile = service.users().getProfile(userId='me').execute()
     print("✅ Connected to Gmail:", profile["emailAddress"])
+

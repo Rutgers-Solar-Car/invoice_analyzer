@@ -35,7 +35,7 @@ def download_invoices():
 
     messages = results.get('messages', [])
     if not messages:
-        print("⚠️ No emails containing 'Invoice' found.")
+        print("No emails containing 'Invoice' found.")
         return
 
     os.makedirs('Old invoices', exist_ok=True)
@@ -46,7 +46,7 @@ def download_invoices():
         # Get subject line for logging
         headers = msg_data['payload'].get('headers', [])
         subject = next((h['value'] for h in headers if h['name'] == 'Subject'), "(No Subject)")
-        print(f"📩 Checking email: {subject}")
+        print(f"Checking email: {subject}")
 
         parts = msg_data['payload'].get('parts', [])
         pdf_found = False
@@ -65,7 +65,7 @@ def download_invoices():
                     file_path = os.path.join('invoices', part['filename'])
                     with open(file_path, 'wb') as f:
                         f.write(data)
-                    print(f"✅ Saved PDF: {file_path}")
+                    print(f"  Saved PDF: {file_path}")
                     pdf_found = True
 
         # If no PDF, save email text itself
@@ -84,7 +84,7 @@ def download_invoices():
                 file_path = os.path.join('invoices', f"{msg['id']}.txt")
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(body)
-                print(f"📝 Saved email text: {file_path}")
+                print(f"   Saved email text: {file_path}")
 
 if __name__ == "__main__":
     download_invoices()
