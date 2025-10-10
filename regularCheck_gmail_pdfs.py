@@ -1,7 +1,3 @@
-from googleapiclient.discovery import build
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.oauth2.credentials import Credentials
 import os
 import base64
 import time
@@ -121,8 +117,10 @@ def process_messages(service, messages, processed_ids):
             if part.get('filename', '').lower().endswith('.pdf')
         )
 
-        if not pdf_saved:
-            save_email_text(msg_data, msg_id, subject, sender, date, SAVE_DIR)
+        save_email_text(msg_data, msg_id, subject, sender, date, SAVE_DIR)
+
+        # if not pdf_saved:
+        #     save_email_text(msg_data, msg_id, subject, sender, date, SAVE_DIR)
 
         processed_ids.add(msg_id)
         new_count += 1

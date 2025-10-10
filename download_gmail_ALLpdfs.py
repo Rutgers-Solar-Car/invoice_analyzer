@@ -2,14 +2,13 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
-import os, base64
+import os, base64, time
 
 """Only and only run this script if you need to download older invoices from Gmail."""
 """This script searches for emails containing the keyword "Invoice" and saves any PDF attachments or the email text itself if no PDF is found."""
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 def get_service():
-    """Authenticate and return Gmail API service."""
     creds = None
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
@@ -23,14 +22,18 @@ def get_service():
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
+def safe_filename(base_name):
+    """Use current epoch time in milliseconds for uniqueness."""
+    millis = int(time.time() * 1000)
+    return f"{millis}_{base_name}"
+
 def download_invoices():
     """Search Gmail for emails containing 'Invoice' and save PDF or email text."""
     service = get_service()
 
-    # Search emails with the keyword "Invoice"
     results = service.users().messages().list(
         userId='me',
-        q='Invoice OR Receipt OR Bill'   # Gmail search query: subject/body must contain "Invoice"
+        q='Invoice OR Receipt OR Bill'
     ).execute()
 
     messages = results.get('messages', [])
@@ -62,26 +65,26 @@ def download_invoices():
                         id=attach_id
                     ).execute()
                     data = base64.urlsafe_b64decode(attachment['data'])
-                    file_path = os.path.join('invoices', part['filename'])
+                    filename = safe_filename(part['filename'])
+                    file_path = os.path.join('Old invoices', filename)
                     with open(file_path, 'wb') as f:
                         f.write(data)
                     print(f"  Saved PDF: {file_path}")
                     pdf_found = True
 
-        # If no PDF, save email text itself
         if not pdf_found:
-            # Try to get plain text body
             body = ""
             if msg_data['payload'].get('body', {}).get('data'):
-                body = base64.urlsafe_b64decode(msg_data['payload']['body']['data']).decode('utf-8')
+                body = base64.urlsafe_b64decode(msg_data['payload']['body']['data']).decode('utf-8', errors='ignore')
             else:
                 for part in parts:
                     if part.get('mimeType') == 'text/plain' and part['body'].get('data'):
-                        body = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
+                        body = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8', errors='ignore')
                         break
 
             if body:
-                file_path = os.path.join('invoices', f"{msg['id']}.txt")
+                filename = safe_filename(f"{msg['id']}.txt")
+                file_path = os.path.join('Old invoices', filename)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(body)
                 print(f"   Saved email text: {file_path}")
