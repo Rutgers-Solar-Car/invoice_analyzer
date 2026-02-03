@@ -1,191 +1,249 @@
-# 📩 Gmail Invoice Manager – Rutgers Solar Car
+# 📩 Invoice Tracker – Rutgers Solar Car
 
-A Python app that connects to Gmail and automatically:
+A professional Python application that automatically monitors Gmail for invoices, extracts data using LLM and vendor-specific parsers, and writes to Google Sheets.
 
-* 📥 Watches for **invoice/receipt/billing emails**
-* 📄 Downloads **PDF attachments** (if present)
-* 📝 Saves email text if no PDF is attached
-* ⏱️ Checks Gmail at regular intervals (default: **10 seconds for testing**)
-* 💾 Stores files in an `invoices/` folder
+## ✨ Features
 
----
-
-## 🚀 Features
-
-* Gmail API + OAuth 2.0 authentication
-* **Case-insensitive keyword detection**
-* Supported keywords:
-
-  ```
-  invoice, receipt, bill, billing, payment, statement,
-  order confirmation, purchase, transaction, remittance,
-  sales order, quote, estimate, delivery note, packing slip,
-  charge, fee, account summary, subscription, renewal,
-  tax invoice, amount due, proof of payment, customer statement
-  ```
-* Scripts included for:
-
-  * ✅ Gmail connection test
-  * 📥 Bulk PDF download
-  * 🔄 Regular invoice polling
+* 🔐 Gmail API + OAuth 2.0 authentication
+* 📥 Automatic invoice email detection (Invoice, Receipt, Bill keywords)
+* 📄 PDF attachment and email text extraction
+* 🤖 Dual extraction engines:
+  * Vendor-specific regex parsers (Home Depot, McMaster-Carr)
+  * LLM-based extraction via Ollama for unknown vendors
+* 📊 Google Sheets integration for data storage
+* ⏱️ 24/7 monitoring with configurable check intervals
+* 📅 Scheduled processing (midnight & 7 AM)
 
 ---
 
 ## 📦 Requirements
 
-* 🐍 Python **3.10+**
-* 📧 Gmail account (Rutgers Gmail supported)
-* ☁️ Google Cloud project with Gmail API enabled
-* 💻 IntelliJ IDEA / VS Code / any Python IDE
+* Python **3.10+**
+* Gmail account (Rutgers Gmail supported)
+* Google Cloud project with Gmail API and Sheets API enabled
+* Ollama (for LLM extraction)
 
 ---
 
-## 🔑 Google Cloud Setup (One-Time)
+## 🚀 Quick Start
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/).
-2. **Create a new project** → name it `invoice-watcher`.
-3. **Enable Gmail API**:
-
-   * Menu → **APIs & Services → Enable APIs and Services**
-   * Search “Gmail API” → Enable
-4. **OAuth Consent Screen**:
-
-   * Menu → **APIs & Services → OAuth consent screen**
-   * User Type: **External**
-   * App name: `Invoice Watcher`
-   * Developer contact: your Gmail
-   * Save
-5. **Create OAuth Credentials**:
-
-   * Menu → **APIs & Services → Credentials**
-   * Create Credentials → OAuth Client ID
-   * Application type: **Desktop App**
-   * Download JSON → rename it to **`credentials.json`**
-   * Place `credentials.json` in your project folder
-
----
-
-## 🛠 Local Setup
-
-1. Clone this repo or download the project folder.
-
-2. Create a virtual environment:
-
+1. **Install dependencies:**
    ```bash
-   python -m venv venv
-   source venv/bin/activate      # Mac/Linux
-   venv\Scripts\activate         # Windows
+   pip install -r requirements.txt
    ```
 
-3. Install dependencies:
+2. **Set up Google Cloud credentials:**
+   * Download `credentials.json` from Google Cloud Console
+   * Place in `credentials/` folder
 
+3. **Configure settings:**
+   * Edit `src/config/settings.py`
+   * Set your `SPREADSHEET_ID`
+
+4. **Run the application:**
    ```bash
-   pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+   python main.py
    ```
 
-(Optional PDF parsing libraries):
+---
 
-```bash
-pip install pdfplumber pytesseract pdf2image openpyxl pandas
+## 📂 Project Structure
+
+```
+Invoice-Tracker/
+├── main.py                    # Main entry point
+├── requirements.txt           # Python dependencies
+├── README.md                  # Documentation
+│
+├── src/
+│   ├── auth/
+│   │   └── gmail_auth.py      # Gmail & Sheets authentication
+│   ├── config/
+│   │   └── settings.py        # Centralized configuration
+│   ├── downloaders/
+│   │   ├── bulk_downloader.py     # Historical email downloader
+│   │   └── monitor_downloader.py  # Real-time email monitor
+│   ├── processors/
+│   │   ├── invoice_processor.py   # Orchestrates parsing
+│   │   ├── file_handler.py        # PDF/TXT file operations
+│   │   ├── llm_extractor.py       # LLM-based extraction
+│   │   └── vendor_parser.py       # Vendor-specific parsers
+│   ├── writers/
+│   │   └── sheets_writer.py       # Google Sheets writer
+│   └── utils/
+│       ├── file_utils.py          # File utilities
+│       └── date_utils.py          # Date utilities
+│
+├── credentials/
+│   ├── credentials.json       # OAuth credentials (you provide)
+│   └── token.json            # Auth token (auto-generated)
+│
+└── data/
+    ├── invoices/             # Current invoices
+    ├── old_invoices/         # Historical invoices
+    └── processed_ids.json    # Tracking file
 ```
 
 ---
 
-## 🔑 First Authentication
+## 🔑 Google Cloud Setup
 
-1. Run the Gmail connection test:
+### 1. Create a Google Cloud Project
 
-   ```bash
-   python check_gmail_connection.py
-   ```
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create new project → name it `invoice-tracker`
 
-2. A browser will open → log in with Gmail → click **Allow**.
+### 2. Enable APIs
 
-3. A `token.json` file will be created in your project folder.
+1. Enable **Gmail API**
+2. Enable **Google Sheets API**
 
-   * Stores your login so you don’t need to reauthenticate.
+### 3. OAuth Consent Screen
+
+1. **APIs & Services** → **OAuth consent screen**
+2. User Type: **External**
+3. App name: `Invoice Tracker`
+4. Add your email as developer contact
+
+### 4. Create Credentials
+
+1. **APIs & Services** → **Credentials**
+2. **Create Credentials** → **OAuth Client ID**
+3. Application type: **Desktop App**
+4. Download JSON → rename to `credentials.json`
+5. Place in `credentials/` folder
 
 ---
 
-## ▶ Usage
+## ⚙️ Configuration
 
-### 🔍 1. Test Gmail Connection
+Edit `src/config/settings.py`:
 
-```bash
-python check_gmail_connection.py
+```python
+# Your Google Sheets ID (from the URL)
+SPREADSHEET_ID = 'your-spreadsheet-id-here'
+
+# Check interval (seconds)
+CHECK_INTERVAL_SECONDS = 60
+
+# Ollama configuration
+OLLAMA_MODEL = "gemma2:2b"
+OLLAMA_URL = "http://localhost:11434/api/chat"
 ```
 
 ---
 
-### 📥 2. Download All PDFs
+## ▶️ Usage
+
+Run the main application:
 
 ```bash
-python download_gmail_ALLpdfs.py
+python main.py
 ```
 
----
+### Menu Options
 
-### 🔄 3. Regular Invoice Checking
-
-```bash
-python regularCheck_gmail_pdfs.py
-```
-
-* Runs every **10 seconds** by default
-* Downloads PDFs or saves text for invoice-related emails
-* Prints **“No invoice receipt.”** if nothing is found
+1. **Test Gmail Connection** - Verify authentication
+2. **Download Old Emails** - Bulk download historical invoices
+3. **Start Invoice Monitor** - Download-only mode (no processing)
+4. **Process Existing Invoices** - Process downloaded invoices
+5. **FULL AUTO (24/7)** - Complete automation (backfill + monitor)
+6. **Scheduled Check** - Run at midnight & 7 AM daily
 
 ---
 
 ## 🧪 Testing
 
-1. Send yourself an email with subject:
-
-   ```
-   Invoice Test – Rutgers Solar Car
-   ```
-
-   Attach a PDF.
-2. Run:
-
-   ```bash
-   python regularCheck_gmail_pdfs.py
-   ```
-3. Within 10 seconds:
-
-   * ✅ PDF saved in `invoices/`
-   * 📝 If no PDF → `.txt` file with email text
+1. Send yourself a test email with subject containing "Invoice"
+2. Attach a PDF or include invoice details in email body
+3. Run option **3** (Monitor) or **5** (Full Auto)
+4. Check your Google Sheet for extracted data
 
 ---
 
-## ⚙️ Automation (Optional)
+## 🏗️ Architecture
 
-* **Windows**: Use Task Scheduler → run `regularCheck_gmail_pdfs.py` at login
-* **Mac/Linux**: Use `cron` or `systemd` to keep it running
+### Single Responsibility Design
 
----
+Each module has one clear purpose:
 
-## 📂 Repository Structure
+* **`auth/`** - Authentication only
+* **`config/`** - Configuration management
+* **`downloaders/`** - Email downloading
+* **`processors/`** - Data extraction and processing
+* **`writers/`** - Data output to Google Sheets
+* **`utils/`** - Shared utilities
+
+### Processing Flow
 
 ```
-.
-├── README.md                  # Project documentation
-├── check_gmail_connection.py  # Test Gmail API connection
-├── download_gmail_ALLpdfs.py  # Bulk PDF downloader
-├── regularCheck_gmail_pdfs.py # Poll Gmail for new invoices
-├── last_check_ms.txt          # Tracks last poll time
-├── processed_messages.json    # Stores processed message IDs
-├── credentials.json           # OAuth credentials (you add this)
-├── token.json                 # Saved Gmail session (auto-created)
-└── invoices/                  # Downloaded PDFs and text files
+Gmail → Downloader → File Handler → Invoice Processor
+                                           ↓
+                              Vendor Parser or LLM Extractor
+                                           ↓
+                                    Sheets Writer
+```
+
+---
+
+## 🔧 Development
+
+### Adding a New Vendor Parser
+
+Edit `src/processors/vendor_parser.py`:
+
+```python
+@register("new_vendor")
+def parse_new_vendor(text: str) -> dict:
+    # Your parsing logic
+    return {
+        "organizations": ["Vendor Name"],
+        "dates": [...],
+        "total_amount": [...],
+        ...
+    }
+```
+
+Update `src/config/settings.py`:
+
+```python
+KNOWN_VENDORS = {
+    "vendor.com": "new_vendor",
+    ...
+}
 ```
 
 ---
 
 ## 📌 Notes
 
-* 🔑 `credentials.json` = your Google Cloud keys
-* 🔐 `token.json` = your saved Gmail login session
-* ⏱ Default interval = **10 seconds** (for testing) → change in code for production (`600` for 10 minutes)
+* **Credentials:** Never commit `credentials.json` or `token.json`
+* **Data Files:** Stored in `data/` for easy management
+* **Logs:** All operations print status messages for debugging
+* **Duplicate Prevention:** Uses Gmail thread IDs to avoid duplicates
 
-Do you want me to also add a **Quick Start section at the very top** (just 5 steps) for advanced users who don’t need the long explanation?
+---
+
+## 🚨 Troubleshooting
+
+**Authentication errors:**
+* Delete `credentials/token.json` and re-authenticate
+
+**No emails found:**
+* Check `src/config/settings.py` → `GMAIL_SEARCH_QUERY`
+* Verify email keywords match your inbox
+
+**LLM extraction fails:**
+* Ensure Ollama is running: `ollama serve`
+* Check model is installed: `ollama list`
+
+**Google Sheets errors:**
+* Verify `SPREADSHEET_ID` is correct
+* Ensure Sheets API is enabled
+* Check sheet permissions
+
+---
+
+## 📝 License
+
+Internal use for Rutgers Solar Car team.

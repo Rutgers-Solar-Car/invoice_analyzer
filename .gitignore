@@ -1,0 +1,73 @@
+# Credentials - NEVER COMMIT THESE
+credentials/credentials.json
+credentials/token.json
+*.json
+
+# Except requirements and package files
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Data files
+data/invoices/*.pdf
+data/invoices/*.txt
+data/old_invoices/*.pdf
+data/old_invoices/*.txt
+data/processed_ids.json
+data/processed.json
+data/processed_messages.json
+last_check_ms.txt
+
+# Keep directories but not contents
+!data/invoices/.gitkeep
+!data/old_invoices/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Old files (can be deleted after migration)
+Driver.py
+check_gmail_connection.py
+download_gmail_ALLpdfs.py
+regularCheck_gmail_pdfs.py
+model_router.py
+file_reader.py
+llm_extractor.py
+vendor_parser.py
+gsheets_writer.py
+excel_writer.py
+process_invoices.py
+algorithm.md
+
+# Excel output
+invoice_data.xlsx

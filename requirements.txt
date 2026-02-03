@@ -1,0 +1,23 @@
+sentencepiece
+# optional (removes the "torchvision not available" image processor warning):
+# torchvision
+
+
+pip~=23.2.1
+google~=3.0.0
+protobuf~=6.32.1
+pillow~=11.3.0
+filelock~=3.20.0
+torch~=2.8.0
+transformers~=4.57.0
+pdf2image~=1.17.0
+google-api-python-client~=2.181.0
+google-auth-oauthlib~=1.2.2
+google-auth-httplib2
+pdfplumber
+openpyxl
+requests
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
