@@ -1,22 +1,22 @@
-# 📩 Invoice Tracker – Rutgers Solar Car
+#  Invoice Tracker – Rutgers Solar Car
 
 A professional Python application that automatically monitors Gmail for invoices, extracts data using LLM and vendor-specific parsers, and writes to Google Sheets.
 
-## ✨ Features
+##  Features
 
-* 🔐 Gmail API + OAuth 2.0 authentication
-* 📥 Automatic invoice email detection (Invoice, Receipt, Bill keywords)
-* 📄 PDF attachment and email text extraction
-* 🤖 Dual extraction engines:
+*  Gmail API + OAuth 2.0 authentication
+*  Automatic invoice email detection (Invoice, Receipt, Bill keywords)
+*  PDF attachment and email text extraction
+*  Dual extraction engines:
   * Vendor-specific regex parsers (Home Depot, McMaster-Carr)
   * LLM-based extraction via Ollama for unknown vendors
-* 📊 Google Sheets integration for data storage
-* ⏱️ 24/7 monitoring with configurable check intervals
-* 📅 Scheduled processing (midnight & 7 AM)
+*  Google Sheets integration for data storage
+*  24/7 monitoring with configurable check intervals
+*  Scheduled processing (midnight & 7 AM)
 
 ---
 
-## 📦 Requirements
+##  Requirements
 
 * Python **3.10+**
 * Gmail account (Rutgers Gmail supported)
@@ -25,7 +25,7 @@ A professional Python application that automatically monitors Gmail for invoices
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 1. **Install dependencies:**
    ```bash
@@ -47,7 +47,7 @@ A professional Python application that automatically monitors Gmail for invoices
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 Invoice-Tracker/
@@ -86,7 +86,7 @@ Invoice-Tracker/
 
 ---
 
-## 🔑 Google Cloud Setup
+##  Google Cloud Setup
 
 ### 1. Create a Google Cloud Project
 
@@ -115,7 +115,7 @@ Invoice-Tracker/
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 Edit `src/config/settings.py`:
 
@@ -133,7 +133,7 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 
 ---
 
-## ▶️ Usage
+## Usage
 
 Run the main application:
 
@@ -152,7 +152,7 @@ python main.py
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 1. Send yourself a test email with subject containing "Invoice"
 2. Attach a PDF or include invoice details in email body
@@ -161,7 +161,7 @@ python main.py
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Single Responsibility Design
 
@@ -186,7 +186,7 @@ Gmail → Downloader → File Handler → Invoice Processor
 
 ---
 
-## 🔧 Development
+##  Development
 
 ### Adding a New Vendor Parser
 
@@ -215,7 +215,7 @@ KNOWN_VENDORS = {
 
 ---
 
-## 📌 Notes
+##  Notes
 
 * **Credentials:** Never commit `credentials.json` or `token.json`
 * **Data Files:** Stored in `data/` for easy management
@@ -224,7 +224,7 @@ KNOWN_VENDORS = {
 
 ---
 
-## 🚨 Troubleshooting
+##  Troubleshooting
 
 **Authentication errors:**
 * Delete `credentials/token.json` and re-authenticate
