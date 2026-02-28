@@ -21,8 +21,13 @@ def backfill():
     existing = sheets_writer.get_existing_thread_ids()
     print(f"[INFO] {len(existing)} existing entries in Google Sheets")
 
-    results = invoice_processor.process_all(existing)
-    count = sum(1 for r in results if sheets_writer.write_invoice_data(r))
+    count = 0
+    for r in invoice_processor.process_all(existing):
+        if sheets_writer.write_invoice_data(r):
+            count += 1
+            tid = r.get("mail_thread_id", "")
+            if tid:
+                existing.add(tid)
 
     print(f"\n[OK] Backfill complete: {count} new invoices")
     return count
@@ -54,8 +59,7 @@ def monitor():
 
                 if new > 0:
                     print(f"[NEW] {new} email(s)")
-                    results = invoice_processor.process_all(excel_ids)
-                    for r in results:
+                    for r in invoice_processor.process_all(excel_ids):
                         if sheets_writer.write_invoice_data(r):
                             tid = r.get("mail_thread_id", "")
                             if tid:
@@ -82,6 +86,31 @@ def scheduled_check_with_llm():
 
     scheduled_times = [dt_time(0, 0), dt_time(7, 0)]
 
+    # --- Initial catch-up: process any invoices received since the last check ---
+    print("\n[INIT] Checking for unprocessed invoices since last run...")
+    messages = monitor_downloader.search_new_messages(service, 7 * 24 * 3600)  # look back 7 days
+
+    if messages:
+        new = monitor_downloader.process_messages(service, messages, processed)
+        monitor_downloader.save_processed_ids(processed)
+
+        if new > 0:
+            print(f"[INIT] {new} new email(s) found - Processing with LLM...")
+            added_count = 0
+            for r in invoice_processor.process_all(excel_ids):
+                if sheets_writer.write_invoice_data(r):
+                    added_count += 1
+                    tid = r.get("mail_thread_id", "")
+                    if tid:
+                        excel_ids.add(tid)
+            print(f"[INIT] Catch-up complete: {added_count} invoices processed and added to sheet")
+        else:
+            print("[INIT] No unprocessed invoices found")
+    else:
+        print("[INIT] No new invoices found")
+
+    print("\n[INFO] Initial catch-up done. Now waiting for scheduled times (12 AM & 7 AM)...")
+
     try:
         while True:
             now = datetime.now()
@@ -107,9 +136,8 @@ def scheduled_check_with_llm():
 
                     if new > 0:
                         print(f"[NEW] {new} email(s) - Processing with LLM...")
-                        results = invoice_processor.process_all(excel_ids)
                         added_count = 0
-                        for r in results:
+                        for r in invoice_processor.process_all(excel_ids):
                             if sheets_writer.write_invoice_data(r):
                                 added_count += 1
                                 tid = r.get("mail_thread_id", "")
@@ -165,8 +193,13 @@ def main():
         monitor_downloader.monitor_invoices(service)
     elif choice == "4":
         existing = sheets_writer.get_existing_thread_ids()
-        results = invoice_processor.process_all(existing)
-        count = sum(1 for r in results if sheets_writer.write_invoice_data(r))
+        count = 0
+        for r in invoice_processor.process_all(existing):
+            if sheets_writer.write_invoice_data(r):
+                count += 1
+                tid = r.get("mail_thread_id", "")
+                if tid:
+                    existing.add(tid)
         print(f"\n[OK] {count} invoices added")
     elif choice == "5":
         backfill()

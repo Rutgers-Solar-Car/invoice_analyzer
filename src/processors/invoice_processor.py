@@ -68,11 +68,14 @@ def process_group(file_paths: list) -> dict:
     return result
 
 
-def process_all(skip_ids: set = None) -> list:
-    """Process all invoice files in the invoice directory."""
+def process_all(skip_ids: set = None):
+    """Process all invoice files in the invoice directory.
+
+    Yields results one at a time so callers can save each invoice
+    immediately before the next one is processed.
+    """
     skip_ids = skip_ids or set()
     grouped = file_handler.get_invoice_files()
-    results = []
 
     for base, paths in grouped.items():
         print(f"\nProcessing: {base}")
@@ -80,9 +83,8 @@ def process_all(skip_ids: set = None) -> list:
 
         if result:
             tid = result.get("mail_thread_id", "")
-            if tid in skip_ids:
+            if tid and tid in skip_ids:
+                print(f"[SKIP] Already processed: {tid}")
                 continue
-            results.append(result)
             print(f"[OK] {result.get('company_name', 'Unknown')} - ${result.get('total_price', 'N/A')}")
-
-    return results
+            yield result

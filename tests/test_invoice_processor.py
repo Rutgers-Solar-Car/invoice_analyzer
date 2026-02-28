@@ -88,7 +88,7 @@ class TestProcessGroup:
 class TestProcessAll:
     @patch('src.processors.invoice_processor.file_handler')
     @patch('src.processors.invoice_processor.process_group')
-    def test_process_all_returns_list(self, mock_process_group, mock_file_handler):
+    def test_process_all_returns_results(self, mock_process_group, mock_file_handler):
         mock_file_handler.get_invoice_files.return_value = {
             'base1': ['/path/file1.txt'],
             'base2': ['/path/file2.txt']
@@ -97,7 +97,7 @@ class TestProcessAll:
             {'mail_thread_id': 't1', 'company_name': 'A'},
             {'mail_thread_id': 't2', 'company_name': 'B'}
         ]
-        assert len(process_all()) == 2
+        assert len(list(process_all())) == 2
 
     @patch('src.processors.invoice_processor.file_handler')
     @patch('src.processors.invoice_processor.process_group')
@@ -110,7 +110,7 @@ class TestProcessAll:
             {'mail_thread_id': 't1', 'company_name': 'A'},
             {'mail_thread_id': 't2', 'company_name': 'B'}
         ]
-        result = process_all(skip_ids={'t1'})
+        result = list(process_all(skip_ids={'t1'}))
         assert len(result) == 1
         assert result[0]['mail_thread_id'] == 't2'
 
@@ -125,9 +125,9 @@ class TestProcessAll:
             {'mail_thread_id': 't1', 'company_name': 'A'},
             None
         ]
-        assert len(process_all()) == 1
+        assert len(list(process_all())) == 1
 
     @patch('src.processors.invoice_processor.file_handler')
     def test_process_all_empty_directory(self, mock_file_handler):
         mock_file_handler.get_invoice_files.return_value = {}
-        assert process_all() == []
+        assert list(process_all()) == []
