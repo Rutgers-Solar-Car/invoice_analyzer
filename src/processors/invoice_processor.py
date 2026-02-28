@@ -68,14 +68,18 @@ def process_group(file_paths: list) -> dict:
     return result
 
 
-def process_all(skip_ids: set = None):
-    """Process all invoice files in the invoice directory.
+def process_all(skip_ids: set = None, invoice_dir: str = None):
+    """Process all invoice files in a directory.
 
     Yields results one at a time so callers can save each invoice
     immediately before the next one is processed.
+
+    Args:
+        skip_ids: Thread IDs to skip.
+        invoice_dir: Directory containing invoice files. Defaults to settings.INVOICE_DIR.
     """
     skip_ids = skip_ids or set()
-    grouped = file_handler.get_invoice_files()
+    grouped = file_handler.get_invoice_files(invoice_dir=invoice_dir)
 
     for base, paths in grouped.items():
         print(f"\nProcessing: {base}")

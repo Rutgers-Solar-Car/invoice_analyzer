@@ -22,7 +22,7 @@ def backfill():
     print(f"[INFO] {len(existing)} existing entries in Google Sheets")
 
     count = 0
-    for r in invoice_processor.process_all(existing):
+    for r in invoice_processor.process_all(existing, invoice_dir=settings.OLD_INVOICE_DIR):
         if sheets_writer.write_invoice_data(r):
             count += 1
             tid = r.get("mail_thread_id", "")

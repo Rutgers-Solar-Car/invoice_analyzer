@@ -98,6 +98,7 @@ class TestProcessAll:
             {'mail_thread_id': 't2', 'company_name': 'B'}
         ]
         assert len(list(process_all())) == 2
+        mock_file_handler.get_invoice_files.assert_called()
 
     @patch('src.processors.invoice_processor.file_handler')
     @patch('src.processors.invoice_processor.process_group')
@@ -131,3 +132,9 @@ class TestProcessAll:
     def test_process_all_empty_directory(self, mock_file_handler):
         mock_file_handler.get_invoice_files.return_value = {}
         assert list(process_all()) == []
+
+    @patch('src.processors.invoice_processor.file_handler')
+    def test_process_all_passes_invoice_dir(self, mock_file_handler):
+        mock_file_handler.get_invoice_files.return_value = {}
+        list(process_all(invoice_dir='data/old_invoices'))
+        mock_file_handler.get_invoice_files.assert_called_with(invoice_dir='data/old_invoices')

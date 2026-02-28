@@ -58,17 +58,23 @@ def parse_email_headers(txt_filepath: str) -> dict:
     return metadata
 
 
-def get_invoice_files() -> dict:
-    """Group invoice files by their base timestamp."""
-    if not os.path.exists(settings.INVOICE_DIR):
+def get_invoice_files(invoice_dir: str = None) -> dict:
+    """Group invoice files by their base timestamp.
+
+    Args:
+        invoice_dir: Directory to scan. Defaults to settings.INVOICE_DIR.
+    """
+    invoice_dir = invoice_dir or settings.INVOICE_DIR
+
+    if not os.path.exists(invoice_dir):
         return {}
 
     grouped = defaultdict(list)
     base_pattern = re.compile(r'(.+_\d{13})')
 
-    for filename in os.listdir(settings.INVOICE_DIR):
+    for filename in os.listdir(invoice_dir):
         if filename.lower().endswith((".pdf", ".txt")):
-            filepath = os.path.join(settings.INVOICE_DIR, filename)
+            filepath = os.path.join(invoice_dir, filename)
 
             match = base_pattern.match(filename)
             if match:
