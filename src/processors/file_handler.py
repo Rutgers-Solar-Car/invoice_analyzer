@@ -2,6 +2,7 @@
 import os
 import re
 import pdfplumber
+import shutil
 from collections import defaultdict
 
 from src.config import settings
@@ -95,3 +96,22 @@ def combine_content(file_paths: list) -> str:
         if text:
             content += f"\n--- {os.path.basename(fp)} ---\n{text}\n"
     return content
+
+
+def move_processed_files(file_paths: list, target_dir: str):
+    """Move processed files to an archive directory."""
+    os.makedirs(target_dir, exist_ok=True)
+
+    for fp in file_paths:
+        try:
+            filename = os.path.basename(fp)
+            target_path = os.path.join(target_dir, filename)
+
+            # Handle potential filename collisions
+            if os.path.exists(target_path):
+                base, ext = os.path.splitext(filename)
+                target_path = os.path.join(target_dir, f"{base}_duplicate{ext}")
+
+            shutil.move(fp, target_path)
+        except Exception as e:
+            print(f"[ERROR] Failed to move {fp}: {e}")

@@ -4,9 +4,26 @@ from datetime import datetime, time as dt_time, timedelta
 
 from src.auth.gmail_auth import get_gmail_service
 from src.downloaders import bulk_downloader, monitor_downloader
-from src.processors import invoice_processor
+from src.processors import invoice_processor, file_handler
 from src.writers import sheets_writer
 from src.config import settings
+
+
+def process_and_archive_invoices(skip_ids: set, invoice_dir: str = None) -> int:
+    """Process invoices one-by-one: write to Sheets, then archive files."""
+    count = 0
+    for r in invoice_processor.process_all(skip_ids, invoice_dir=invoice_dir):
+        if sheets_writer.write_invoice_data(r):
+            count += 1
+            tid = r.get("mail_thread_id", "")
+            if tid:
+                skip_ids.add(tid)
+
+            file_paths = r.get("_file_paths", [])
+            if file_paths:
+                print(f"[MOVE] Archiving {len(file_paths)} file(s) to {settings.OLD_INVOICE_DIR}...")
+                file_handler.move_processed_files(file_paths, settings.OLD_INVOICE_DIR)
+    return count
 
 
 def backfill():
@@ -21,13 +38,7 @@ def backfill():
     existing = sheets_writer.get_existing_thread_ids()
     print(f"[INFO] {len(existing)} existing entries in Google Sheets")
 
-    count = 0
-    for r in invoice_processor.process_all(existing, invoice_dir=settings.OLD_INVOICE_DIR):
-        if sheets_writer.write_invoice_data(r):
-            count += 1
-            tid = r.get("mail_thread_id", "")
-            if tid:
-                existing.add(tid)
+    count = process_and_archive_invoices(existing, invoice_dir=settings.INVOICE_DIR)
 
     print(f"\n[OK] Backfill complete: {count} new invoices")
     return count
@@ -59,11 +70,7 @@ def monitor():
 
                 if new > 0:
                     print(f"[NEW] {new} email(s)")
-                    for r in invoice_processor.process_all(excel_ids):
-                        if sheets_writer.write_invoice_data(r):
-                            tid = r.get("mail_thread_id", "")
-                            if tid:
-                                excel_ids.add(tid)
+                    process_and_archive_invoices(excel_ids, invoice_dir=settings.INVOICE_DIR)
             else:
                 print("No new invoices")
 
@@ -96,13 +103,7 @@ def scheduled_check_with_llm():
 
         if new > 0:
             print(f"[INIT] {new} new email(s) found - Processing with LLM...")
-            added_count = 0
-            for r in invoice_processor.process_all(excel_ids):
-                if sheets_writer.write_invoice_data(r):
-                    added_count += 1
-                    tid = r.get("mail_thread_id", "")
-                    if tid:
-                        excel_ids.add(tid)
+            added_count = process_and_archive_invoices(excel_ids, invoice_dir=settings.INVOICE_DIR)
             print(f"[INIT] Catch-up complete: {added_count} invoices processed and added to sheet")
         else:
             print("[INIT] No unprocessed invoices found")
@@ -136,13 +137,7 @@ def scheduled_check_with_llm():
 
                     if new > 0:
                         print(f"[NEW] {new} email(s) - Processing with LLM...")
-                        added_count = 0
-                        for r in invoice_processor.process_all(excel_ids):
-                            if sheets_writer.write_invoice_data(r):
-                                added_count += 1
-                                tid = r.get("mail_thread_id", "")
-                                if tid:
-                                    excel_ids.add(tid)
+                        added_count = process_and_archive_invoices(excel_ids, invoice_dir=settings.INVOICE_DIR)
                         print(f"[OK] {added_count} invoices processed and added to sheet")
                     else:
                         print("Emails downloaded but already processed")
@@ -174,8 +169,8 @@ def main():
            INVOICE TRACKER (Google Sheets Edition)
 ============================================================
   1. Test Gmail Connection
-  2. Download Old Emails
-  3. Start Invoice Monitor (download only)
+  2. Download Old Emails (process + archive)
+  3. Start Invoice Monitor (process + archive)
   4. Process Existing Invoices
   5. FULL AUTO (24/7) [*]
   6. Scheduled Check (12 AM & 7 AM) with LLM
@@ -188,18 +183,14 @@ def main():
         get_gmail_service()
     elif choice == "2":
         bulk_downloader.download_invoices()
+        existing = sheets_writer.get_existing_thread_ids()
+        count = process_and_archive_invoices(existing, invoice_dir=settings.INVOICE_DIR)
+        print(f"\n[OK] {count} invoices added")
     elif choice == "3":
-        service = get_gmail_service()
-        monitor_downloader.monitor_invoices(service)
+        monitor()
     elif choice == "4":
         existing = sheets_writer.get_existing_thread_ids()
-        count = 0
-        for r in invoice_processor.process_all(existing):
-            if sheets_writer.write_invoice_data(r):
-                count += 1
-                tid = r.get("mail_thread_id", "")
-                if tid:
-                    existing.add(tid)
+        count = process_and_archive_invoices(existing, invoice_dir=settings.INVOICE_DIR)
         print(f"\n[OK] {count} invoices added")
     elif choice == "5":
         backfill()

@@ -21,7 +21,7 @@ def download_invoices():
         print("No emails containing invoice keywords found.")
         return
 
-    os.makedirs(settings.OLD_INVOICE_DIR, exist_ok=True)
+    os.makedirs(settings.INVOICE_DIR, exist_ok=True)
 
     for msg in messages:
         msg_data = service.users().messages().get(userId='me', id=msg['id']).execute()
@@ -44,7 +44,7 @@ def download_invoices():
                     ).execute()
                     data = base64.urlsafe_b64decode(attachment['data'])
                     filename = safe_filename(part['filename'])
-                    file_path = os.path.join(settings.OLD_INVOICE_DIR, filename)
+                    file_path = os.path.join(settings.INVOICE_DIR, filename)
                     with open(file_path, 'wb') as f:
                         f.write(data)
                     print(f"  Saved PDF: {file_path}")
@@ -66,7 +66,7 @@ def download_invoices():
 
             if body:
                 filename = safe_filename(f"{msg['id']}.txt")
-                file_path = os.path.join(settings.OLD_INVOICE_DIR, filename)
+                file_path = os.path.join(settings.INVOICE_DIR, filename)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(body)
                 print(f"   Saved email text: {file_path}")

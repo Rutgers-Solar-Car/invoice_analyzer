@@ -91,4 +91,7 @@ def process_all(skip_ids: set = None, invoice_dir: str = None):
                 print(f"[SKIP] Already processed: {tid}")
                 continue
             print(f"[OK] {result.get('company_name', 'Unknown')} - ${result.get('total_price', 'N/A')}")
+
+            # Attach original file paths to result so caller can move them if desired
+            result['_file_paths'] = paths
             yield result
